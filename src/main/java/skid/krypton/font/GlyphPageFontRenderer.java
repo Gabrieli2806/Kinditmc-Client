@@ -197,6 +197,7 @@ public final class GlyphPageFontRenderer {
         page.bind();
 
         GlStateManager._texParameter(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        GlStateManager._texParameter(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
         for (int i = 0; i < text.length(); ++i) {
             final char ch = text.charAt(i);
@@ -256,6 +257,7 @@ public final class GlyphPageFontRenderer {
         page.bind();
 
         GlStateManager._texParameter(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        GlStateManager._texParameter(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
         for (int i = 0; i < text.length(); ++i) {
             final char ch = text.charAt(i);

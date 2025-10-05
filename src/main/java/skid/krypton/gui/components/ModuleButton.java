@@ -3,6 +3,8 @@ package skid.krypton.gui.components;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.util.InputUtil;
+import org.lwjgl.glfw.GLFW;
 import skid.krypton.Krypton;
 import skid.krypton.gui.CategoryWindow;
 import skid.krypton.gui.Component;
@@ -35,6 +37,8 @@ public final class ModuleButton {
     private float hoverAnimation;
     private float enabledAnimation;
     private final float expandAnimation;
+    private int lastMouseX;
+    private int lastMouseY;
 
     public ModuleButton(final CategoryWindow parent, final Module module, final int offset) {
         this.settings = new ArrayList<>();
@@ -76,6 +80,10 @@ public final class ModuleButton {
         if (this.parent.getY() + this.offset > MinecraftClient.getInstance().getWindow().getHeight()) {
             return;
         }
+        // Store mouse coordinates for key press detection
+        this.lastMouseX = n;
+        this.lastMouseY = n2;
+
         final Iterator<Component> iterator = this.settings.iterator();
         while (iterator.hasNext()) {
             iterator.next().onUpdate();
@@ -195,6 +203,18 @@ public final class ModuleButton {
     }
 
     public void keyPressed(final int n, final int n2, final int n3) {
+        // Check if custom dropdown key is pressed while hovering to open dropdown (Mac compatibility)
+        if (n == skid.krypton.module.modules.client.Krypton.dropdownKey.getValue()) {
+            if (this.isHovered(this.lastMouseX, this.lastMouseY)) {
+                if (!this.module.getSettings().isEmpty()) {
+                    if (!this.extended) {
+                        this.onExtend();
+                    }
+                    this.extended = !this.extended;
+                }
+            }
+        }
+
         final Iterator<Component> iterator = this.settings.iterator();
         while (iterator.hasNext()) {
             iterator.next().keyPressed(n, n2, n3);
@@ -216,17 +236,23 @@ public final class ModuleButton {
                 final int n4 = this.parent.getX() + this.parent.getWidth() - 30;
                 final int n5 = this.parent.getY() + this.offset + this.parent.getHeight() / 2 - 3;
 
+                // Check if clicking on toggle switch
                 if (n >= n4 && n <= n4 + 12 && n2 >= n5 && n2 <= n5 + 6) {
                     this.module.toggle();
-                } else if (!this.module.getSettings().isEmpty() && n > this.parent.getX() + this.parent.getWidth() - 25) {
+                }
+                // Check if clicking on settings area (right side of button)
+                else if (!this.module.getSettings().isEmpty() && n > this.parent.getX() + this.parent.getWidth() - 25) {
                     if (!this.extended) {
                         this.onExtend();
                     }
                     this.extended = !this.extended;
-                } else {
+                }
+                // Otherwise toggle module
+                else {
                     this.module.toggle();
                 }
             } else if (button == 1) {
+                // Right-click opens settings dropdown (Mac compatibility)
                 if (this.module.getSettings().isEmpty()) {
                     return;
                 }

@@ -33,8 +33,7 @@ public final class TextRenderer {
         final MatrixStack matrices = drawContext.getMatrices();
         matrices.push();
         matrices.scale(2.0f, 2.0f, 2.0f);
-        drawContext.drawText(skid.krypton.Krypton.mc.textRenderer, charSequence.toString(), n / 2, n2 / 2, n3, false);
-        matrices.scale(1.0f, 1.0f, 1.0f);
+        drawContext.drawText(skid.krypton.Krypton.mc.textRenderer, charSequence.toString(), n / 2, n2 / 2, n3, true);
         matrices.pop();
     }
 
@@ -42,8 +41,7 @@ public final class TextRenderer {
         final MatrixStack matrices = drawContext.getMatrices();
         matrices.push();
         matrices.scale(2.0f, 2.0f, 2.0f);
-        drawContext.drawText(skid.krypton.Krypton.mc.textRenderer, (String) charSequence, n / 2 - skid.krypton.Krypton.mc.textRenderer.getWidth((String) charSequence) / 2, n2 / 2, n3, false);
-        matrices.scale(1.0f, 1.0f, 1.0f);
+        drawContext.drawText(skid.krypton.Krypton.mc.textRenderer, (String) charSequence, n / 2 - skid.krypton.Krypton.mc.textRenderer.getWidth((String) charSequence) / 2, n2 / 2, n3, true);
         matrices.pop();
     }
 }

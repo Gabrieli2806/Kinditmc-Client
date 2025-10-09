@@ -30,11 +30,11 @@ public final class Krypton extends Module {
     public static final NumberSetting cornerRoundness = new NumberSetting(EncryptedString.of("Roundness"), 1.0, 10.0, 5.0, 1.0);
     public static final ModeSetting<AnimationMode> animationMode = new ModeSetting<>(EncryptedString.of("Animations"), AnimationMode.NORMAL, AnimationMode.class);
     public static final BooleanSetting enableMSAA = new BooleanSetting(EncryptedString.of("MSAA"), true).setDescription(EncryptedString.of("Anti Aliasing | This can impact performance if you're using tracers but gives them a smoother look |"));
-    public static final BindSetting dropdownKey = new BindSetting(EncryptedString.of("Dropdown Key"), GLFW.GLFW_KEY_ENTER, false).setDescription(EncryptedString.of("Key to open module settings dropdown (Mac compatibility)"));
+    public static final BindSetting dropdownKey = new BindSetting(EncryptedString.of("Dropdown Key"), GLFW.GLFW_KEY_RIGHT_SHIFT, false).setDescription(EncryptedString.of("Key to open module settings dropdown (Mac compatibility)"));
     public boolean shouldPreventClose;
 
     public Krypton() {
-        super(EncryptedString.of("KinditMC Client"), EncryptedString.of("Settings for the client"), 344, Category.CLIENT);
+        super(EncryptedString.of("KinditMC Client"), EncryptedString.of("Settings for the client"), GLFW.GLFW_KEY_END, Category.CLIENT);
         this.addSettings(Krypton.redColor, Krypton.greenColor, Krypton.blueColor, Krypton.windowAlpha, Krypton.renderBackground, this.preventClose, Krypton.cornerRoundness, Krypton.animationMode, Krypton.enableMSAA, Krypton.dropdownKey);
     }
 

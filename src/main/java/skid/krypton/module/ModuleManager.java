@@ -39,6 +39,7 @@ public final class ModuleManager {
         this.a(new AnchorMacro());
         this.a(new AutoCrystal());
         this.a(new DoubleAnchor());
+        this.a(new SilentAim());
         this.a(new FastPlace());
         this.a(new Freecam());
         this.a(new AutoFirework());

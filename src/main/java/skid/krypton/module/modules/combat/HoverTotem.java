@@ -52,7 +52,8 @@ public final class HoverTotem extends Module {
         if (focusedSlot.getStack().getItem() != Items.TOTEM_OF_UNDYING) {
             return;
         }
-        if (this.remainingDelay > 0) {
+        // Skip delay check if tick delay is 0 for instant response
+        if (this.tickDelay.getIntValue() > 0 && this.remainingDelay > 0) {
             --this.remainingDelay;
             return;
         }

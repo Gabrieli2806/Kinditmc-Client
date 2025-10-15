@@ -21,6 +21,8 @@ public final class SilentAim extends Module {
     private final NumberSetting accuracy = new NumberSetting(EncryptedString.of("Accuracy"), 0.0, 100.0, 100.0, 1.0).getValue(EncryptedString.of("Hit accuracy percentage"));
     private final NumberSetting reach = new NumberSetting(EncryptedString.of("Reach"), 3.0, 6.0, 4.5, 0.1).getValue(EncryptedString.of("Maximum attack reach distance"));
     private final NumberSetting fov = new NumberSetting(EncryptedString.of("FOV"), 30.0, 180.0, 90.0, 5.0).getValue(EncryptedString.of("Field of view to find targets"));
+    private final NumberSetting rotationSpeed = new NumberSetting(EncryptedString.of("Rotation Speed"), 1.0, 20.0, 8.0, 0.5).getValue(EncryptedString.of("How fast the camera rotates (higher = faster, more robotic)"));
+    private final NumberSetting smoothness = new NumberSetting(EncryptedString.of("Smoothness"), 0.1, 1.0, 0.3, 0.05).getValue(EncryptedString.of("How smooth the rotation is (lower = smoother, more natural)"));
     private final BooleanSetting wTap = new BooleanSetting(EncryptedString.of("W-Tap"), false).setDescription(EncryptedString.of("Automatically W-tap when hitting"));
     private final ModeSetting<HitMode> hitMode = new ModeSetting<>(EncryptedString.of("Hit Mode"), HitMode.AUTO, HitMode.class);
 
@@ -31,7 +33,7 @@ public final class SilentAim extends Module {
 
     public SilentAim() {
         super(EncryptedString.of("Aim Assist"), EncryptedString.of("Automatically aims camera at nearby entities"), -1, Category.COMBAT);
-        this.addSettings(this.accuracy, this.reach, this.fov, this.wTap, this.hitMode);
+        this.addSettings(this.accuracy, this.reach, this.fov, this.rotationSpeed, this.smoothness, this.wTap, this.hitMode);
     }
 
     @Override
@@ -144,7 +146,7 @@ public final class SilentAim extends Module {
             return;
         }
 
-        // Calculate rotation to target
+        // Calculate target rotation
         final Vec3d playerPos = this.mc.player.getEyePos();
         final Vec3d targetPos = this.targetEntity.getBoundingBox().getCenter();
         final Vec3d diff = targetPos.subtract(playerPos);
@@ -153,9 +155,29 @@ public final class SilentAim extends Module {
         final float targetYaw = (float) Math.toDegrees(Math.atan2(diff.z, diff.x)) - 90.0f;
         final float targetPitch = (float) -Math.toDegrees(Math.atan2(diff.y, distance));
 
-        // MOVE CAMERA VISIBLY to target
-        this.mc.player.setYaw(targetYaw);
-        this.mc.player.setPitch(targetPitch);
+        // Current rotation
+        final float currentYaw = this.mc.player.getYaw();
+        final float currentPitch = this.mc.player.getPitch();
+
+        // Calculate rotation difference
+        float yawDiff = targetYaw - currentYaw;
+        float pitchDiff = targetPitch - currentPitch;
+
+        // Normalize yaw difference to -180 to 180 range
+        while (yawDiff > 180.0f) yawDiff -= 360.0f;
+        while (yawDiff < -180.0f) yawDiff += 360.0f;
+
+        // Apply smooth rotation with speed and smoothness
+        final float speed = this.rotationSpeed.getFloatValue();
+        final float smooth = this.smoothness.getFloatValue();
+
+        // Interpolate smoothly towards target
+        final float newYaw = currentYaw + (yawDiff * smooth * speed * 0.1f);
+        final float newPitch = currentPitch + (pitchDiff * smooth * speed * 0.1f);
+
+        // Apply the smooth rotation
+        this.mc.player.setYaw(newYaw);
+        this.mc.player.setPitch(newPitch);
     }
 
     private boolean isLookingAtTarget() {

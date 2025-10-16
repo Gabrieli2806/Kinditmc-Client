@@ -27,12 +27,15 @@ public final class AnchorMacro extends Module {
     private final NumberSetting totemSlot = new NumberSetting(EncryptedString.of("Totem Slot"), 1.0, 9.0, 1.0, 1.0);
     private final BooleanSetting autoSafe = new BooleanSetting(EncryptedString.of("Auto Safe"), true).setDescription(EncryptedString.of("Automatically place obsidian to protect from explosion"));
     private final NumberSetting safeDelay = new NumberSetting(EncryptedString.of("Safe Delay"), 0.0, 20.0, 2.0, 1.0);
+    private final BooleanSetting autoExplode = new BooleanSetting(EncryptedString.of("Auto Explode"), true).setDescription(EncryptedString.of("Automatically explode after placing obsidian (no need to keep clicking)"));
 
     private int keybind;
     private int glowstoneDelayCounter;
     private int explodeDelayCounter;
     private int safeDelayCounter;
     private boolean safeBlockPlaced;
+    private boolean autoExplodeActive;
+    private BlockPos anchorPosition;
 
     public AnchorMacro() {
         super(EncryptedString.of("Anchor Macro"), EncryptedString.of("Automatically blows up respawn anchors for you"), -1, Category.COMBAT);
@@ -41,7 +44,9 @@ public final class AnchorMacro extends Module {
         this.explodeDelayCounter = 0;
         this.safeDelayCounter = 0;
         this.safeBlockPlaced = false;
-        this.addSettings(this.switchDelay, this.glowstoneDelay, this.explodeDelay, this.totemSlot, this.autoSafe, this.safeDelay);
+        this.autoExplodeActive = false;
+        this.anchorPosition = null;
+        this.addSettings(this.switchDelay, this.glowstoneDelay, this.explodeDelay, this.totemSlot, this.autoSafe, this.safeDelay, this.autoExplode);
     }
 
     @Override
@@ -63,6 +68,14 @@ public final class AnchorMacro extends Module {
         if (this.isShieldOrFoodActive()) {
             return;
         }
+
+        // Proceso automático activo - continuar sin necesidad de mantener clic
+        if (this.autoExplodeActive && this.anchorPosition != null) {
+            this.continueAutoExplode();
+            return;
+        }
+
+        // Click derecho manual
         if (KeyUtils.isKeyPressed(1)) {
             this.handleAnchorInteraction();
         }
@@ -83,9 +96,15 @@ public final class AnchorMacro extends Module {
             return;
         }
         this.mc.options.useKey.setPressed(false);
+
         if (BlockUtil.isRespawnAnchorUncharged(blockHitResult.getBlockPos())) {
             this.placeGlowstone(blockHitResult);
         } else if (BlockUtil.isRespawnAnchorCharged(blockHitResult.getBlockPos())) {
+            // Iniciar proceso automático si auto safe y auto explode están activados
+            if (this.autoSafe.getValue() && this.autoExplode.getValue() && !this.autoExplodeActive) {
+                this.autoExplodeActive = true;
+                this.anchorPosition = blockHitResult.getBlockPos();
+            }
             this.explodeAnchor(blockHitResult);
         }
     }
@@ -154,6 +173,39 @@ public final class AnchorMacro extends Module {
         // Reset para el próximo uso
         this.safeBlockPlaced = false;
         this.safeDelayCounter = 0;
+        this.autoExplodeActive = false;
+        this.anchorPosition = null;
+    }
+
+    private void continueAutoExplode() {
+        if (this.anchorPosition == null || this.mc.player == null) {
+            this.autoExplodeActive = false;
+            return;
+        }
+
+        // Verificar que el anchor todavía existe y está cargado
+        if (!BlockUtil.isBlockAtPosition(this.anchorPosition, Blocks.RESPAWN_ANCHOR)) {
+            this.autoExplodeActive = false;
+            this.anchorPosition = null;
+            return;
+        }
+
+        if (!BlockUtil.isRespawnAnchorCharged(this.anchorPosition)) {
+            this.autoExplodeActive = false;
+            this.anchorPosition = null;
+            return;
+        }
+
+        // Crear BlockHitResult para el anchor guardado
+        final BlockHitResult blockHitResult = new BlockHitResult(
+            this.anchorPosition.toCenterPos(),
+            Direction.UP,
+            this.anchorPosition,
+            false
+        );
+
+        // Continuar con el proceso de explosión
+        this.explodeAnchor(blockHitResult);
     }
 
     private boolean placeSafeBlock(final BlockPos anchorPos) {
@@ -225,5 +277,7 @@ public final class AnchorMacro extends Module {
         this.explodeDelayCounter = 0;
         this.safeDelayCounter = 0;
         this.safeBlockPlaced = false;
+        this.autoExplodeActive = false;
+        this.anchorPosition = null;
     }
 }
